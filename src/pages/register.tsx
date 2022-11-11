@@ -3,29 +3,42 @@ import { useRouter } from 'next/router';
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import toast, { Toaster } from 'react-hot-toast';
-import { useDispatch } from 'react-redux';
 
-import { getFromSessionStorage } from '@/lib/helper';
+import { generateUniqueId, getFromSessionStorage } from '@/lib/helper';
 
 import { Banner } from '@/components/banners';
 import Button from '@/components/buttons/Button';
 import Layout from '@/components/layout/Layout';
 import Seo from '@/components/Seo';
 
-import { handleLogin } from '@/features/inventory/inventorySlice';
 import { User } from '@/interface';
 
-export default function HomePage() {
+export default function Register() {
   const router = useRouter();
-  const dispatch = useDispatch();
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
+  const onSubmit = (data: any) => {
+    if (data.password !== data.confirm_password) {
+      toast.error('Enter Matching Passwords!');
+      return;
+    }
 
-  const onSubmit = (data: { email: string; password: string; }) => {
+    // Remove confirm_password from payload
+    delete data.confirm_password;
+
     const users = getFromSessionStorage('users');
+
+    //Preload user with a default category
+    data.category = [
+      {
+        id: generateUniqueId(),
+        name: 'Books',
+        items: [],
+      },
+    ];
 
     if (users) {
       const parsed_users: User[] = JSON.parse(users);
@@ -35,25 +48,24 @@ export default function HomePage() {
 
       //Check if user exists and handle
       if (user) {
-        if (user.email === data.email && user.password === data.password) {
-          toast.success(`Welcome ${user.name}`);
-          dispatch(handleLogin(user));
-          setTimeout(() => {
-            toast('Loading...');
-          }, 1000);
-
-          setTimeout(() => {
-            router.push('/dashboard');
-          }, 3000);
-        } else {
-          toast.error('Invalid Email or Password');
-        }
+        toast.error('User Already Exists');
         return;
       } else {
-        toast.error('User Not Found');
+        //Copy all user and append new user
+        sessionStorage.setItem(
+          'users',
+          JSON.stringify([...parsed_users, data])
+        );
+        toast.success('User Created');
       }
     } else {
-      toast.error('User Not Found');
+      //Create new user array
+      sessionStorage.setItem('users', JSON.stringify([data]));
+      toast.success('User Created');
+      toast('Redirecting To Login');
+      setTimeout(() => {
+        router.push('/');
+      }, 3000);
     }
   };
 
@@ -69,7 +81,7 @@ export default function HomePage() {
             <div className='w-full max-w-md space-y-8'>
               <div>
                 <h2 className='mt-6 text-center text-3xl font-bold tracking-tight text-gray-900'>
-                  Sign In
+                  Register
                 </h2>
               </div>
 
@@ -77,6 +89,12 @@ export default function HomePage() {
                 <Banner type='error' message='Valid Email Required' />
               )}
               {errors.password && (
+                <Banner
+                  type='error'
+                  message='Password Must Be At Least 8 Characters'
+                />
+              )}
+              {errors.confirm_password && (
                 <Banner
                   type='error'
                   message='Password Must Be At Least 8 Characters'
@@ -108,6 +126,20 @@ export default function HomePage() {
                     />
                   </div>
                   <div>
+                    <label htmlFor='email-address' className='sr-only'>
+                      Username
+                    </label>
+                    <input
+                      id='name'
+                      type='text'
+                      autoComplete='name'
+                      required
+                      className='relative block w-full appearance-none rounded-none border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm'
+                      placeholder='Username'
+                      {...register('name', { required: true })}
+                    />
+                  </div>
+                  <div>
                     <label htmlFor='password' className='sr-only'>
                       Password
                     </label>
@@ -116,9 +148,27 @@ export default function HomePage() {
                       type='password'
                       autoComplete='current-password'
                       required
-                      className='relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm'
+                      className='relative block w-full appearance-none rounded-none border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm'
                       placeholder='Password'
                       {...register('password', {
+                        required: true,
+                        minLength: 8,
+                      })}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor='password' className='sr-only'>
+                      Confirm Password
+                    </label>
+                    <input
+                      id='password'
+                      type='password'
+                      autoComplete='current-password'
+                      required
+                      className='relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm'
+                      placeholder='Confirm Password'
+                      {...register('confirm_password', {
                         required: true,
                         minLength: 8,
                       })}
@@ -131,7 +181,7 @@ export default function HomePage() {
                     type='submit'
                     className='group relative flex w-full justify-center rounded-md border border-transparent'
                   >
-                    Sign In
+                    Sign up
                   </Button>
                 </div>
               </form>

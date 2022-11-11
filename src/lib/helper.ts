@@ -1,3 +1,5 @@
+import uniqid from 'uniqid';
+
 type OpenGraphType = {
   siteName: string;
   description: string;
@@ -38,4 +40,8 @@ export function getFromSessionStorage(key: string): string | null {
     return sessionStorage.getItem(key);
   }
   return null;
+}
+
+export function generateUniqueId() {
+  return uniqid();
 }
