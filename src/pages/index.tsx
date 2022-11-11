@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @next/next/no-img-element */
 import { useRouter } from 'next/router';
 import * as React from 'react';
@@ -24,7 +25,7 @@ export default function HomePage() {
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data: { email: string; password: string; }) => {
+  const onSubmit = (data: any) => {
     const users = getFromSessionStorage('users');
 
     if (users) {

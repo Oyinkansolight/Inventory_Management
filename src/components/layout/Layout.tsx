@@ -14,13 +14,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const routes = ['/', '/register'];
     if (!isLoggedIn && !routes.includes(router.pathname)) {
-      router.push('/')
+      router.push('/');
     }
 
     setIsLoading(false);
-  }, [isLoggedIn, router])
+  }, [isLoggedIn, router]);
 
-  if (isLoading) return <div>Loading.....</div>
+  if (isLoading) return <div>Loading.....</div>;
 
   return (
     <>
